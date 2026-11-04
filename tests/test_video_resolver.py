@@ -1,10 +1,8 @@
 """Tests for the Plexo Video Stream Resolver and Quality Fallback Engine."""
 
-import pytest
 from plexo.video.resolver import (
     AudioTrack,
     SubtitleTrack,
-    VideoMetadata,
     VideoTrack,
     parse_manifest_dict,
     parse_target_resolution,

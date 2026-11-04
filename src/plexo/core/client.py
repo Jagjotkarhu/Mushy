@@ -9,10 +9,13 @@ from __future__ import annotations
 
 import os
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Callable, Dict, Generator, Optional
 from urllib.parse import unquote, urlparse
 import urllib3
+import urllib3.connection
+
+from plexo.core.adapter import interface_socket_options
 
 
 @dataclass
@@ -224,15 +227,22 @@ class BoundRangeClient:
         custom_headers: Optional[Dict[str, str]] = None,
         cookie: Optional[str] = None,
         referer: Optional[str] = None,
+        iface_name: Optional[str] = None,
     ):
         self.local_ip = local_ip
+        self.iface_name = iface_name
         self.timeout = timeout
         self.custom_headers = custom_headers or {}
         self.cookie = parse_cookie_input(cookie)
         self.referer = referer
 
+        socket_options = list(urllib3.connection.HTTPConnection.default_socket_options)
+        if iface_name:
+            socket_options.extend(interface_socket_options(iface_name))
+
         self._pool = urllib3.PoolManager(
             source_address=(local_ip, 0),
+            socket_options=socket_options,
             timeout=urllib3.Timeout(connect=timeout, read=timeout),
             retries=urllib3.Retry(total=3, backoff_factor=0.5),
         )

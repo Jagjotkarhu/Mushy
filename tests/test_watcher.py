@@ -1,16 +1,13 @@
 """Tests for clipboard watcher and automatic download detection."""
 
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-import pytest
 from click.testing import CliRunner
 
 from plexo.cli import main
 from plexo.ui.watcher import (
     ClipboardWatcher,
     extract_download_links,
-    get_clipboard_text,
 )
 
 

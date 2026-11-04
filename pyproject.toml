@@ -4,13 +4,13 @@ build-backend = "hatchling.build"
 
 [project]
 name = "plexo-cli"
-version = "0.2.1"
+version = "0.2.2"
 description = "Multi-network bandwidth bonding download engine & CLI"
 readme = "README.md"
 requires-python = ">=3.9"
 license = "MIT"
 authors = [
-    { name = "Jagjot Singh", email = "gotogether@gmail.com" },
+    { name = "Jagjot Singh", email = "gotogether90@gmail.com" },
 ]
 keywords = [
     "download-accelerator",
@@ -58,10 +58,10 @@ test = [
 ]
 
 [project.urls]
-Homepage = "https://getplexo.app"
+Homepage = "https://github.com/Jagjotkarhu/plexo"
 Repository = "https://github.com/Jagjotkarhu/plexo"
-Issues = "https://github.com/anmolkapil/plexo/issues"
-Changelog = "https://github.com/Jagjotkarhu/plexo/blob/main/CHANGELOG.md"
+Issues = "https://github.com/Jagjotkarhu/plexo/issues"
+Changelog = "https://github.com/Jagjotkarhu/plexo/blob/main/packages/plexo-cli/CHANGELOG.md"
 
 [project.scripts]
 plexo = "plexo.cli:main"
@@ -72,3 +72,13 @@ packages = ["src/plexo"]
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
+asyncio_default_fixture_loop_scope = "function"
+
+[tool.ruff]
+line-length = 120
+target-version = "py39"
+
+[tool.ruff.lint]
+# Correctness-only gate: syntax errors, undefined names, unused imports/variables.
+# Broader style rules (UP, BLE, S, ...) can be enabled gradually.
+select = ["E9", "F"]

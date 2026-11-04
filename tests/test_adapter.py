@@ -1,6 +1,5 @@
 """Tests for adapter discovery and classification."""
 
-import pytest
 from plexo.core.adapter import classify_interface, is_usable_ip, NetworkAdapter
 
 

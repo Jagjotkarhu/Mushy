@@ -1,12 +1,9 @@
 """Unit tests for the bonded video downloader and track orchestrator."""
 
-from pathlib import Path
 from unittest.mock import MagicMock, patch
-import pytest
 
 from plexo.video.downloader import (
     BondedVideoDownloader,
-    download_subtitle_track,
     sanitize_filename,
 )
 from plexo.video.resolver import AudioTrack, SubtitleTrack, VideoMetadata, VideoTrack
@@ -277,7 +274,7 @@ def test_cli_download_auto_delegation():
     from plexo.cli import main
 
     runner = CliRunner()
-    with patch("plexo.cli.video_download") as mock_video_cmd:
+    with patch("plexo.cli.video_download"):
         result = runner.invoke(main, ["download", "https://www.youtube.com/watch?v=dQw4w9WgXcQ"])
         assert "Media stream URL detected. Delegating to plexo video..." in result.output
 

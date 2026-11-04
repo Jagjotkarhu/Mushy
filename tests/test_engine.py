@@ -167,7 +167,22 @@ def test_bonded_engine_resume(mock_server):
             assert hashlib.sha256(f.read()).hexdigest() == expected_hash
 
 
+def _second_loopback_or_skip() -> str:
+    """127.0.0.2 is only bindable on Linux/Windows; macOS needs an explicit alias."""
+    import socket
+
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        s.bind(("127.0.0.2", 0))
+    except OSError:
+        pytest.skip("127.0.0.2 is not bindable on this platform")
+    finally:
+        s.close()
+    return "127.0.0.2"
+
+
 def test_bonded_engine_adapter_quota(mock_server):
+    second_ip = _second_loopback_or_skip()
     with tempfile.TemporaryDirectory() as tmpdir:
         output_file = Path(tmpdir) / "quota_test.bin"
         chunk_size = 128 * 1024
@@ -182,7 +197,7 @@ def test_bonded_engine_adapter_quota(mock_server):
         )
         mock_nic_2 = NetworkAdapter(
             name="Unlimited-WiFi",
-            ip_address="127.0.0.2",
+            ip_address=second_ip,
             netmask="255.255.255.0",
             kind="wifi",
             is_up=True,

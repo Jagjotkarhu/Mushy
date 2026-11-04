@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import sys
 import time
-from pathlib import Path
 from typing import Optional
 
 # Ensure UTF-8 output on Windows consoles
@@ -24,7 +23,7 @@ from rich.panel import Panel
 from rich.table import Table
 from . import __version__
 from .core.adapter import discover_adapters, get_bonded_pool
-from .core.engine import BondingDownloadEngine, ProgressUpdate
+from .core.engine import BondingDownloadEngine
 from .proxy.server import run_proxy
 from .ui.dashboard import TerminalDashboard
 
@@ -111,7 +110,7 @@ def download_file(
     is_static = any(url.lower().split("?")[0].endswith(ext) for ext in static_exts)
     if not is_static and any(domain in url.lower() for domain in video_domains):
         console.print(
-            f"[bold cyan][INFO][/bold cyan] Media stream URL detected. Delegating to [bold green]plexo video[/bold green]..."
+            "[bold cyan][INFO][/bold cyan] Media stream URL detected. Delegating to [bold green]plexo video[/bold green]..."
         )
         ctx = click.get_current_context()
         ctx.invoke(
@@ -364,19 +363,22 @@ def video_download(
 @click.option("--host", default="127.0.0.1", help="Proxy listening host (default: 127.0.0.1).")
 @click.option("--port", default=8899, type=int, help="Proxy listening port (default: 8899).")
 @click.option("--auth", default=None, help="Proxy authentication in 'username:password' format.")
-@click.option("--allow-remote", is_flag=True, default=False, help="Allow non-loopback binding without authentication.")
-def start_proxy(host: str, port: int, auth: Optional[str], allow_remote: bool):
+@click.option("--allow-remote", is_flag=True, default=False, hidden=True, help="Deprecated and ignored: non-loopback binds always require --auth.")
+@click.option("--allow-private", is_flag=True, default=False, help="Allow proxying to loopback/private/link-local destinations (disabled by default to prevent SSRF).")
+def start_proxy(host: str, port: int, auth: Optional[str], allow_remote: bool, allow_private: bool):
     """Launch local acceleration proxy for pip, git, and curl."""
     from .proxy.server import is_loopback_host
-    if not is_loopback_host(host) and not auth and not allow_remote:
+    if allow_remote:
+        click.echo("Note: --allow-remote is deprecated and ignored; non-loopback binds require --auth.", err=True)
+    if not is_loopback_host(host) and not auth:
         raise click.UsageError(
             f"Refusing to bind to non-loopback host '{host}' without authentication.\n"
             "Security Risk: This would expose an unauthenticated open proxy to the network.\n"
-            "Pass --auth <user:pass> or explicitly pass --allow-remote to proceed."
+            "Pass --auth <user:pass> to proceed."
         )
     if auth and ":" not in auth:
         raise click.UsageError("Argument --auth must be formatted as 'username:password'.")
-    run_proxy(host=host, port=port, auth=auth, allow_remote=allow_remote)
+    run_proxy(host=host, port=port, auth=auth, allow_private=allow_private)
 
 
 @main.command(name="torrent")

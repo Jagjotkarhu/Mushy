@@ -10,13 +10,102 @@ import asyncio
 import base64
 import hmac
 import ipaddress
-import re
 import socket
 from typing import Optional, Set, Tuple
 from rich.console import Console
-from ..core.adapter import get_bonded_pool
+from ..core.adapter import NetworkAdapter, bind_socket_to_interface, get_bonded_pool
 
 ALLOWED_CONNECT_PORTS: Set[int] = {80, 443}
+
+# Hop-by-hop / proxy-only headers that must never be forwarded to the origin.
+_STRIPPED_REQUEST_HEADERS = (b"proxy-authorization", b"proxy-connection")
+
+
+class DestinationBlocked(Exception):
+    """Raised when a proxied destination resolves to a non-public address."""
+
+
+def is_blocked_address(ip: "ipaddress._BaseAddress") -> bool:
+    """Return True for any address that is not a publicly routable unicast address.
+
+    Covers loopback, RFC1918/ULA private ranges, link-local (incl. the cloud
+    metadata address 169.254.169.254), CGNAT, multicast, reserved and unspecified.
+    """
+    mapped = getattr(ip, "ipv4_mapped", None)
+    if mapped is not None:
+        ip = mapped
+    return (not ip.is_global) or ip.is_multicast
+
+
+async def open_bound_connection(
+    target_ip: str, port: int, adapter: Optional[NetworkAdapter]
+) -> Tuple[asyncio.StreamReader, asyncio.StreamWriter]:
+    """Open a TCP connection pinned to ``adapter`` (device binding, else source IP)."""
+    if adapter is None:
+        return await asyncio.open_connection(target_ip, port)
+
+    family = socket.AF_INET6 if ":" in target_ip else socket.AF_INET
+    adapter_is_v6 = ":" in adapter.ip_address
+    if (family == socket.AF_INET6) != adapter_is_v6:
+        # Address-family mismatch: the adapter's IPv4 address cannot reach an IPv6 target.
+        return await asyncio.open_connection(target_ip, port)
+
+    sock = socket.socket(family, socket.SOCK_STREAM)
+    try:
+        sock.setblocking(False)
+        bind_socket_to_interface(sock, adapter.name, adapter.ip_address)
+        await asyncio.get_running_loop().sock_connect(sock, (target_ip, port))
+    except BaseException:
+        sock.close()
+        raise
+    return await asyncio.open_connection(sock=sock)
+
+
+async def resolve_destination(
+    host: str,
+    port: int,
+    allow_private: bool = False,
+    prefer_family: Optional[int] = None,
+) -> str:
+    """Resolve ``host`` and return one validated IP literal to connect to.
+
+    Every resolved address is checked, and callers must connect to the returned
+    literal (not the hostname) so a second DNS lookup cannot rebind to an
+    internal address after validation.
+    """
+    loop = asyncio.get_running_loop()
+    infos = await loop.getaddrinfo(host, port, type=socket.SOCK_STREAM)
+    candidates = []
+    for family, _, _, _, sockaddr in infos:
+        ip = ipaddress.ip_address(sockaddr[0].split("%")[0])
+        if not allow_private and is_blocked_address(ip):
+            raise DestinationBlocked(f"{host} resolves to non-public address {ip}")
+        candidates.append((family, str(ip)))
+    if not candidates:
+        raise DestinationBlocked(f"{host} did not resolve")
+    if prefer_family is not None:
+        for family, ip_str in candidates:
+            if family == prefer_family:
+                return ip_str
+    return candidates[0][1]
+
+
+def parse_connect_target(target: str) -> Tuple[str, int]:
+    """Parse a CONNECT authority (``host:port``, ``[v6]:port`` or bare host)."""
+    if target.startswith("["):
+        end = target.find("]")
+        host = target[1:end] if end != -1 else target[1:]
+        rest = target[end + 1:] if end != -1 else ""
+        port_str = rest[1:] if rest.startswith(":") else "443"
+    elif target.count(":") == 1:
+        host, port_str = target.split(":")
+    else:
+        host, port_str = target, "443"
+    try:
+        port = int(port_str)
+    except ValueError:
+        port = 443
+    return host, port
 
 
 def is_loopback_host(host: str) -> bool:
@@ -57,22 +146,23 @@ class LocalBondedProxy:
         host: str = "127.0.0.1",
         port: int = 8899,
         auth: Optional[str] = None,
-        allow_remote: bool = False,
+        allow_private: bool = False,
         console: Optional[Console] = None,
     ):
-        if not is_loopback_host(host) and not auth and not allow_remote:
+        if not is_loopback_host(host) and not auth:
             raise ValueError(
                 f"Refusing to bind to non-loopback host '{host}' without authentication.\n"
-                "To bind to remote interfaces, provide --auth user:pass or explicitly pass --allow-remote."
+                "Provide --auth user:pass to expose the proxy beyond this machine."
             )
 
         self.host = host
         self.port = port
         self.auth = auth
-        self.allow_remote = allow_remote
+        self.allow_private = allow_private
         self.console = console or Console()
         self.server: Optional[asyncio.Server] = None
         self._adapters = []
+        self._rr_counter = 0
 
     async def start(self) -> None:
         """Starts the local proxy server."""
@@ -126,7 +216,8 @@ class LocalBondedProxy:
                 line = await client_reader.readline()
                 if not line or line == b"\r\n":
                     break
-                raw_headers.extend(line)
+                if line.split(b":", 1)[0].strip().lower() not in _STRIPPED_REQUEST_HEADERS:
+                    raw_headers.extend(line)
                 decoded_line = line.decode("latin1").strip()
                 if ":" in decoded_line:
                     k, v = decoded_line.split(":", 1)
@@ -148,11 +239,7 @@ class LocalBondedProxy:
 
             # 2. Enforce CONNECT Port Restriction
             if method.upper() == "CONNECT":
-                host, port_str = url.split(":") if ":" in url else (url, "443")
-                try:
-                    port = int(port_str)
-                except ValueError:
-                    port = 443
+                host, port = parse_connect_target(url)
 
                 if port not in ALLOWED_CONNECT_PORTS:
                     msg = (
@@ -178,17 +265,35 @@ class LocalBondedProxy:
             except Exception:
                 pass
 
+    def _next_adapter(self) -> Optional[NetworkAdapter]:
+        """Pick the next adapter round-robin (one adapter per connection).
+
+        This balances *connections* across links; a single TCP flow is never
+        split across adapters.
+        """
+        if not self._adapters:
+            return None
+        adapter = self._adapters[self._rr_counter % len(self._adapters)]
+        self._rr_counter += 1
+        return adapter
+
     async def _handle_connect(
         self, host: str, port: int, client_reader: asyncio.StreamReader, client_writer: asyncio.StreamWriter
     ) -> None:
         """Tunnels HTTPS connections directly."""
         try:
-            adapter = self._adapters[0] if self._adapters else None
-            local_addr = (adapter.ip_address, 0) if adapter else None
+            adapter = self._next_adapter()
 
-            remote_reader, remote_writer = await asyncio.open_connection(
-                host, port, local_addr=local_addr
-            )
+            try:
+                family = socket.AF_INET if adapter and ":" not in adapter.ip_address else None
+                target_ip = await resolve_destination(
+                    host, port, self.allow_private, prefer_family=family
+                )
+            except DestinationBlocked:
+                await self._reject(client_writer, "destination is not a public address")
+                return
+
+            remote_reader, remote_writer = await open_bound_connection(target_ip, port, adapter)
 
             client_writer.write(b"HTTP/1.1 200 Connection Established\r\n\r\n")
             await client_writer.drain()
@@ -221,7 +326,17 @@ class LocalBondedProxy:
         port = parsed.port or 80
 
         try:
-            remote_reader, remote_writer = await asyncio.open_connection(host, port)
+            if port not in ALLOWED_CONNECT_PORTS:
+                await self._reject(client_writer, f"port {port} is restricted by Plexo")
+                return
+            try:
+                target_ip = await resolve_destination(host, port, self.allow_private)
+            except DestinationBlocked:
+                await self._reject(client_writer, "destination is not a public address")
+                return
+
+            adapter = self._next_adapter()
+            remote_reader, remote_writer = await open_bound_connection(target_ip, port, adapter)
             remote_writer.write(full_request)
             await remote_writer.drain()
 
@@ -235,6 +350,16 @@ class LocalBondedProxy:
                 client_writer.close()
             except Exception:
                 pass
+
+    async def _reject(self, client_writer: asyncio.StreamWriter, reason: str) -> None:
+        """Send a 403 and close the client connection."""
+        body = f"Blocked by Plexo: {reason}.\r\n".encode("utf-8")
+        client_writer.write(
+            b"HTTP/1.1 403 Forbidden\r\nContent-Type: text/plain\r\n"
+            b"Connection: close\r\nContent-Length: " + str(len(body)).encode() + b"\r\n\r\n" + body
+        )
+        await client_writer.drain()
+        client_writer.close()
 
     async def _pipe(
         self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter
@@ -260,8 +385,10 @@ def run_proxy(
     host: str = "127.0.0.1",
     port: int = 8899,
     auth: Optional[str] = None,
-    allow_remote: bool = False,
+    allow_private: bool = False,
 ) -> None:
     """Synchronous launcher for the proxy server."""
-    proxy = LocalBondedProxy(host=host, port=port, auth=auth, allow_remote=allow_remote)
+    proxy = LocalBondedProxy(
+        host=host, port=port, auth=auth, allow_private=allow_private
+    )
     asyncio.run(proxy.start())

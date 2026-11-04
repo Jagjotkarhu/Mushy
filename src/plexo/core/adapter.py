@@ -7,43 +7,100 @@ filters internal/virtual networks, and verifies outward internet reachability.
 from __future__ import annotations
 
 import ipaddress
+import logging
 import platform
 import socket
 import struct
-import subprocess
 from dataclasses import dataclass
-from typing import List, Optional
+from functools import lru_cache
+from typing import List, Optional, Tuple
 import psutil
-import urllib3
 
-SO_BINDTODEVICE = 25
+logger = logging.getLogger(__name__)
+
+# Fall back to the Linux/macOS numeric values if this Python build lacks the constants.
+SO_BINDTODEVICE = getattr(socket, "SO_BINDTODEVICE", 25)
 IP_BOUND_IF = 25
 IPV6_BOUND_IF = 125
 
+_warned_ifaces: set = set()
 
-def bind_socket_to_interface(sock: socket.socket, iface_name: str, iface_ip: Optional[str] = None) -> None:
-    """
-    Bind a socket to a specific network interface across Linux, macOS, and Windows.
-    Prevents Linux Weak Host kernel routing from funnelling packets into default gateway.
-    """
+
+def _warn_once(iface_name: str, message: str) -> None:
+    if iface_name not in _warned_ifaces:
+        _warned_ifaces.add(iface_name)
+        logger.warning(message)
+
+
+def _device_binding_option(sock_family: int, iface_name: str):
+    """Return the (level, optname, value) tuple that pins a socket to an interface, or None."""
     current_os = platform.system().lower()
     if current_os == "linux":
+        return (socket.SOL_SOCKET, SO_BINDTODEVICE, iface_name.encode("utf-8") + b"\0")
+    if current_os == "darwin":
+        if_index = socket.if_nametoindex(iface_name)
+        if sock_family == socket.AF_INET6:
+            return (socket.IPPROTO_IPV6, IPV6_BOUND_IF, struct.pack("I", if_index))
+        return (socket.IPPROTO_IP, IP_BOUND_IF, struct.pack("I", if_index))
+    return None  # Windows: source-address binding is sufficient
+
+
+def bind_socket_to_interface(sock: socket.socket, iface_name: str, iface_ip: Optional[str] = None) -> str:
+    """Bind a socket to a specific network interface (Linux, macOS, Windows).
+
+    Returns how the socket was bound: ``"device"`` (kernel-enforced interface
+    binding), ``"source-ip"`` (source address only; on Linux the kernel may
+    still route via the default gateway unless policy routing is configured)
+    or ``"none"`` (nothing could be applied). Falls back with a one-time warning.
+    """
+    try:
+        option = _device_binding_option(sock.family, iface_name)
+        if option is not None:
+            sock.setsockopt(*option)
+            return "device"
+    except (PermissionError, OSError):
+        _warn_once(
+            iface_name,
+            f"Could not pin sockets to interface {iface_name} (needs CAP_NET_RAW on Linux < 5.7); "
+            "falling back to source-IP binding. Traffic may still use the default route unless "
+            "policy routing is configured - run 'plexo doctor' to verify.",
+        )
+
+    if iface_ip:
         try:
-            sock.setsockopt(socket.SOL_SOCKET, SO_BINDTODEVICE, iface_name.encode("utf-8") + b"\0")
-        except (PermissionError, OSError):
-            if iface_ip:
-                sock.bind((iface_ip, 0))
-    elif current_os == "darwin":
-        try:
-            if_index = socket.if_nametoindex(iface_name)
-            opt = IP_BOUND_IF if sock.family == socket.AF_INET else IPV6_BOUND_IF
-            sock.setsockopt(socket.IPPROTO_IP if sock.family == socket.AF_INET else socket.IPPROTO_IPV6, opt, struct.pack("I", if_index))
-        except Exception:
-            if iface_ip:
-                sock.bind((iface_ip, 0))
-    else:
-        if iface_ip:
             sock.bind((iface_ip, 0))
+            return "source-ip"
+        except OSError:
+            pass
+
+    if platform.system().lower() != "windows":
+        _warn_once(f"{iface_name}:none", f"No interface binding could be applied for {iface_name}.")
+    return "none"
+
+
+@lru_cache(maxsize=32)
+def interface_socket_options(iface_name: str) -> Tuple[Tuple, ...]:
+    """Socket options that pin outgoing sockets to ``iface_name`` (for urllib3 ``socket_options``).
+
+    Probes once per interface so that an unsupported or unprivileged setup
+    degrades to source-IP binding instead of failing every connection.
+    """
+    probe = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        option = _device_binding_option(socket.AF_INET, iface_name)
+        if option is None:
+            return ()
+        probe.setsockopt(*option)
+        return (option,)
+    except (PermissionError, OSError):
+        _warn_once(
+            iface_name,
+            f"Could not pin sockets to interface {iface_name}; using source-IP binding only. "
+            "Run 'plexo doctor' to verify traffic is really split across links.",
+        )
+        return ()
+    finally:
+        probe.close()
 
 
 @dataclass

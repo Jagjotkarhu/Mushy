@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Dict, List
+from typing import Dict, List, Optional
 from rich.console import Console
 from rich.panel import Panel
 from rich.progress import (
@@ -70,7 +70,7 @@ class TerminalDashboard:
         )
 
         self.overall_task = self.progress.add_task(
-            f"[bold green]Bonded Total", total=total_bytes
+            "[bold green]Bonded Total", total=total_bytes
         )
 
         for a in adapters:

@@ -18,12 +18,12 @@ def check_video_dependencies() -> None:
     """Ensure optional [video] dependencies are installed before executing."""
     missing = []
     try:
-        import yt_dlp
+        import yt_dlp  # noqa: F401
     except ImportError:
         missing.append("yt-dlp")
 
     try:
-        import curl_cffi
+        import curl_cffi  # noqa: F401
     except ImportError:
         missing.append("curl_cffi")
 

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import time
-from typing import List, Tuple
+from typing import List
 import psutil
 from rich.console import Console
 from rich.table import Table
@@ -62,7 +62,7 @@ def run_doctor_diagnostic(active_interfaces: List[str], duration_secs: float = 2
         console.print(
             "\n[bold yellow]⚠️ WARNING: Only 1 interface carried traffic during multi-link test![/bold yellow]\n"
             "[white]On Linux: Kernel Weak Host routing may be forcing traffic through default gateway.[/white]\n"
-            "[white]Fix: Run with 'sudo' (for SO_BINDTODEVICE) or configure policy routing tables.[/white]\n"
+            "[white]Fix: grant CAP_NET_RAW or run with 'sudo' on Linux < 5.7 (for SO_BINDTODEVICE), or configure policy routing tables.[/white]\n"
         )
         return False
 

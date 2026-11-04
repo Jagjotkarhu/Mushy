@@ -64,7 +64,7 @@ def mux_media_streams(
     cmd.extend(["-c", "copy", str(output_path)])
 
     try:
-        proc = subprocess.run(
+        subprocess.run(
             cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,

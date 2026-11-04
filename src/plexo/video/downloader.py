@@ -6,7 +6,6 @@ automatic track retrieval (video + audio + subtitles), and zero-copy container m
 
 from __future__ import annotations
 
-import os
 import re
 import urllib3
 from pathlib import Path

@@ -157,6 +157,7 @@ class BondingDownloadEngine:
         local_ip = adapter.ip_address if adapter else "0.0.0.0"
         client = BoundRangeClient(
             local_ip=local_ip,
+            iface_name=adapter.name if adapter else None,
             custom_headers=self.custom_headers,
             cookie=self.cookie,
             referer=self.referer,
@@ -379,6 +380,7 @@ class BondingDownloadEngine:
         """Worker thread dedicated to a specific network adapter with mirror distribution."""
         client = BoundRangeClient(
             local_ip=adapter.ip_address,
+            iface_name=adapter.name,
             custom_headers=self.custom_headers,
             cookie=self.cookie,
             referer=self.referer,
@@ -401,7 +403,6 @@ class BondingDownloadEngine:
 
             metric.active_chunks += 1
             chunk_data = bytearray()
-            success = False
 
             # Select mirror URL: base offset from worker, rotating across healthy mirrors on retries
             target_url = self._select_mirror(preferred_mirror_idx, chunk.chunk_id, chunk.retries)
@@ -461,7 +462,6 @@ class BondingDownloadEngine:
                             )
                     except Exception:
                         pass
-                success = True
 
             except Exception as err:
                 with self._bytes_lock:

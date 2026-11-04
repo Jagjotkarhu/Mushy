@@ -67,7 +67,6 @@ class TorrentBondingEngine:
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
         total_bytes = self.metadata.total_length
-        piece_len = self.metadata.piece_length
 
         if total_bytes <= 0 or not self.metadata.pieces:
             raise ValueError("Torrent metadata must include total_length and pieces.")
@@ -83,12 +82,6 @@ class TorrentBondingEngine:
             piece_order = [piece_indices[0], piece_indices[-1]] + piece_indices[1:-1]
         else:
             piece_order = piece_indices
-
-        target_bytes = (
-            sum(f.length for f in self.metadata.files if f.index in self.selected_files)
-            if self.selected_files
-            else total_bytes
-        )
 
         for idx in piece_order:
             piece_queue.put(idx)
@@ -190,7 +183,7 @@ class TorrentBondingEngine:
                         )
                     )
 
-            except Exception as err:
+            except Exception:
                 metric.record_error()
                 # Re-queue piece for another adapter
                 piece_queue.put(piece_idx)

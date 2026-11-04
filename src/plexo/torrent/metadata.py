@@ -6,7 +6,7 @@ import base64
 import hashlib
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import List, Optional
+from typing import List
 from urllib.parse import parse_qs, unquote, urlparse
 from .bencode import bdecode, bencode
 

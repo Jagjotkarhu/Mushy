@@ -2,8 +2,6 @@
 
 import hashlib
 import tempfile
-from pathlib import Path
-import pytest
 from plexo.core.adapter import NetworkAdapter
 from plexo.torrent.bencode import bdecode, bencode
 from plexo.torrent.client import TorrentBondingEngine
