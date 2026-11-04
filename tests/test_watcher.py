@@ -4,8 +4,8 @@ from unittest.mock import MagicMock, patch
 
 from click.testing import CliRunner
 
-from plexo.cli import main
-from plexo.ui.watcher import (
+from mushy.cli import main
+from mushy.ui.watcher import (
     ClipboardWatcher,
     extract_download_links,
 )
@@ -165,9 +165,9 @@ def test_clipboard_watcher_creates_nonexistent_output_dir(tmp_path):
     dummy_file.write_bytes(b"data")
     mock_engine.execute.return_value = dummy_file
 
-    with patch("plexo.core.adapter.get_bonded_pool", return_value=[MagicMock(ip_address="127.0.0.1", name="eth0", kind="ethernet")]), \
-         patch("plexo.core.engine.BondingDownloadEngine", return_value=mock_engine), \
-         patch("plexo.core.sparse.SparseFileWriter"):
+    with patch("mushy.core.adapter.get_bonded_pool", return_value=[MagicMock(ip_address="127.0.0.1", name="eth0", kind="ethernet")]), \
+         patch("mushy.core.engine.BondingDownloadEngine", return_value=mock_engine), \
+         patch("mushy.core.sparse.SparseFileWriter"):
         watcher = ClipboardWatcher(
             poll_interval=0.1,
             auto_download=True,

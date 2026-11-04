@@ -1,6 +1,6 @@
 """Tests for adapter discovery and classification."""
 
-from plexo.core.adapter import classify_interface, is_usable_ip, NetworkAdapter
+from mushy.core.adapter import classify_interface, is_usable_ip, NetworkAdapter
 
 
 def test_classify_interface():

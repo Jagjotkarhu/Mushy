@@ -63,7 +63,7 @@ def bind_socket_to_interface(sock: socket.socket, iface_name: str, iface_ip: Opt
             iface_name,
             f"Could not pin sockets to interface {iface_name} (needs CAP_NET_RAW on Linux < 5.7); "
             "falling back to source-IP binding. Traffic may still use the default route unless "
-            "policy routing is configured - run 'plexo doctor' to verify.",
+            "policy routing is configured - run 'mushy doctor' to verify.",
         )
 
     if iface_ip:
@@ -96,7 +96,7 @@ def interface_socket_options(iface_name: str) -> Tuple[Tuple, ...]:
         _warn_once(
             iface_name,
             f"Could not pin sockets to interface {iface_name}; using source-IP binding only. "
-            "Run 'plexo doctor' to verify traffic is really split across links.",
+            "Run 'mushy doctor' to verify traffic is really split across links.",
         )
         return ()
     finally:

@@ -4,7 +4,7 @@ import hashlib
 import tempfile
 from pathlib import Path
 import pytest
-from plexo.core.sparse import SparseFileWriter
+from mushy.core.sparse import SparseFileWriter
 
 
 def test_sparse_file_allocation_and_writes():
@@ -48,7 +48,7 @@ def test_sparse_file_out_of_bounds():
 def test_sparse_file_checksum():
     with tempfile.TemporaryDirectory() as tmpdir:
         target = Path(tmpdir) / "checksum_test.bin"
-        payload = b"Hello, Plexo Multi-Network Bonding!"
+        payload = b"Hello, Mushy Multi-Network Bonding!"
         total_size = len(payload)
 
         with SparseFileWriter(target, total_size) as writer:

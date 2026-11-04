@@ -228,7 +228,7 @@ class BondingDownloadEngine:
         import json
         total_bytes = probe.total_bytes
         chunk_queue: queue.PriorityQueue[DownloadChunk] = queue.PriorityQueue()
-        state_file = target_path.with_name(target_path.name + ".plexo")
+        state_file = target_path.with_name(target_path.name + ".mushy")
         completed_chunk_ids: set[int] = set()
 
         # Check for existing checkpoint

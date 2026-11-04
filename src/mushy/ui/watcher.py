@@ -227,7 +227,7 @@ class ClipboardWatcher:
         """Runs the monitoring loop until stopped or interrupted."""
         self.console.print(
             Panel.fit(
-                "[bold cyan]Plexo Clipboard Watcher Active[/bold cyan]\n"
+                "[bold cyan]Mushy Clipboard Watcher Active[/bold cyan]\n"
                 f"Mode: [yellow]{'Auto-Download (--auto-download)' if self.auto_download else 'Interactive Confirmation'}[/yellow]\n"
                 f"Poll Interval: [green]{self.poll_interval}s[/green]\n"
                 f"Destination: [magenta]{self.output_dir}[/magenta]\n"

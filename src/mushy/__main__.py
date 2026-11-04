@@ -1,4 +1,4 @@
-"""Entry point for python -m plexo."""
+"""Entry point for python -m mushy."""
 
 from .cli import main
 

@@ -2,11 +2,11 @@
 
 from unittest.mock import MagicMock, patch
 
-from plexo.video.downloader import (
+from mushy.video.downloader import (
     BondedVideoDownloader,
     sanitize_filename,
 )
-from plexo.video.resolver import AudioTrack, SubtitleTrack, VideoMetadata, VideoTrack
+from mushy.video.resolver import AudioTrack, SubtitleTrack, VideoMetadata, VideoTrack
 
 
 def test_sanitize_filename_special_chars():
@@ -21,7 +21,7 @@ def test_sanitize_filename_length_and_empty():
     long_name = "A" * 200
     cleaned = sanitize_filename(long_name, max_length=50)
     assert len(cleaned) == 50
-    assert sanitize_filename("   ...   ") == "plexo_download"
+    assert sanitize_filename("   ...   ") == "mushy_download"
 
 
 def test_resolve_target_destination():
@@ -30,7 +30,7 @@ def test_resolve_target_destination():
         id="vid123",
         webpage_url="https://example.com/watch?v=vid123",
         duration=120,
-        uploader="Plexo",
+        uploader="Mushy",
         selected_video=VideoTrack(
             format_id="137", ext="mp4", resolution="1080p", height=1080, width=1920,
             fps=30, vcodec="avc1", url="http://example.com/v.mp4", has_audio=True
@@ -52,7 +52,7 @@ def test_resolve_target_destination():
         id="aud123",
         webpage_url="https://example.com/audio",
         duration=300,
-        uploader="Plexo",
+        uploader="Mushy",
         selected_video=None,
         selected_audio=AudioTrack(
             format_id="140", ext="m4a", language="en", abr=128.0,
@@ -69,7 +69,7 @@ def test_download_audio_only(tmp_path):
         id="aud1",
         webpage_url="https://example.com/audio",
         duration=60,
-        uploader="Plexo",
+        uploader="Mushy",
         selected_video=None,
         selected_audio=AudioTrack(
             format_id="140", ext="m4a", language="en", abr=128.0,
@@ -80,7 +80,7 @@ def test_download_audio_only(tmp_path):
     out_file = tmp_path / "audio_out.m4a"
     downloader = BondedVideoDownloader(metadata=meta, output_path=out_file)
 
-    with patch("plexo.video.downloader.BondingDownloadEngine") as mock_engine_cls:
+    with patch("mushy.video.downloader.BondingDownloadEngine") as mock_engine_cls:
         mock_instance = MagicMock()
         mock_instance.execute.return_value = out_file
         mock_engine_cls.return_value = mock_instance
@@ -113,8 +113,8 @@ def test_download_combined_video(tmp_path):
     out_file = tmp_path / "reel.mp4"
     downloader = BondedVideoDownloader(metadata=meta, output_path=out_file)
 
-    with patch("plexo.video.downloader.BondingDownloadEngine") as mock_engine_cls, \
-         patch("plexo.video.downloader.download_subtitle_track") as mock_sub:
+    with patch("mushy.video.downloader.BondingDownloadEngine") as mock_engine_cls, \
+         patch("mushy.video.downloader.download_subtitle_track") as mock_sub:
         mock_instance = MagicMock()
         mock_instance.execute.return_value = out_file
         mock_engine_cls.return_value = mock_instance
@@ -156,9 +156,9 @@ def test_download_split_streams_with_muxer(tmp_path):
         temp_a.write_bytes(b"FAKE_AUDIO_STREAM")
         return temp_v
 
-    with patch("plexo.video.downloader.BondingDownloadEngine") as mock_engine_cls, \
-         patch("plexo.video.downloader.is_ffmpeg_available", return_value=True), \
-         patch("plexo.video.downloader.mux_media_streams") as mock_mux:
+    with patch("mushy.video.downloader.BondingDownloadEngine") as mock_engine_cls, \
+         patch("mushy.video.downloader.is_ffmpeg_available", return_value=True), \
+         patch("mushy.video.downloader.mux_media_streams") as mock_mux:
 
         mock_instance = MagicMock()
         mock_instance.execute.side_effect = [temp_v, temp_a]
@@ -205,8 +205,8 @@ def test_download_split_streams_fallback_without_ffmpeg(tmp_path):
     temp_v.write_bytes(b"FAKE_VIDEO")
     temp_a.write_bytes(b"FAKE_AUDIO")
 
-    with patch("plexo.video.downloader.BondingDownloadEngine") as mock_engine_cls, \
-         patch("plexo.video.downloader.is_ffmpeg_available", return_value=False):
+    with patch("mushy.video.downloader.BondingDownloadEngine") as mock_engine_cls, \
+         patch("mushy.video.downloader.is_ffmpeg_available", return_value=False):
 
         mock_instance = MagicMock()
         mock_instance.execute.side_effect = [temp_v, temp_a]
@@ -224,7 +224,7 @@ def test_download_split_streams_fallback_without_ffmpeg(tmp_path):
 
 def test_cli_video_help():
     from click.testing import CliRunner
-    from plexo.cli import main
+    from mushy.cli import main
 
     runner = CliRunner()
     result = runner.invoke(main, ["video", "--help"])
@@ -238,14 +238,14 @@ def test_cli_video_help():
 
 def test_cli_video_list_formats():
     from click.testing import CliRunner
-    from plexo.cli import main
+    from mushy.cli import main
 
     meta = VideoMetadata(
         title="Sample Video",
         id="s123",
         webpage_url="https://youtube.com/watch?v=s123",
         duration=100,
-        uploader="Plexo",
+        uploader="Mushy",
         all_videos=[
             VideoTrack(format_id="137", ext="mp4", resolution="1080p", height=1080, width=1920, fps=30, vcodec="h264", url="http://example.com/v1"),
             VideoTrack(format_id="136", ext="mp4", resolution="720p", height=720, width=1280, fps=30, vcodec="h264", url="http://example.com/v2"),
@@ -259,8 +259,8 @@ def test_cli_video_list_formats():
     )
 
     runner = CliRunner()
-    with patch("plexo.cli.resolve_video", return_value=meta, create=True), \
-         patch("plexo.video.resolver.resolve_video", return_value=meta):
+    with patch("mushy.cli.resolve_video", return_value=meta, create=True), \
+         patch("mushy.video.resolver.resolve_video", return_value=meta):
         result = runner.invoke(main, ["video", "https://youtube.com/watch?v=s123", "--list"])
         assert result.exit_code == 0
         assert "Available Video Streams" in result.output
@@ -271,10 +271,10 @@ def test_cli_video_list_formats():
 
 def test_cli_download_auto_delegation():
     from click.testing import CliRunner
-    from plexo.cli import main
+    from mushy.cli import main
 
     runner = CliRunner()
-    with patch("plexo.cli.video_download"):
+    with patch("mushy.cli.video_download"):
         result = runner.invoke(main, ["download", "https://www.youtube.com/watch?v=dQw4w9WgXcQ"])
-        assert "Media stream URL detected. Delegating to plexo video..." in result.output
+        assert "Media stream URL detected. Delegating to mushy video..." in result.output
 

@@ -1,6 +1,6 @@
 import base64
 import pytest
-from plexo.proxy.server import (
+from mushy.proxy.server import (
     is_loopback_host,
     validate_proxy_auth,
     ALLOWED_CONNECT_PORTS,
@@ -78,8 +78,8 @@ def test_proxy_init_security_guards():
 import asyncio  # noqa: E402
 import ipaddress  # noqa: E402
 
-import plexo.proxy.server as server_mod  # noqa: E402
-from plexo.proxy.server import (  # noqa: E402
+import mushy.proxy.server as server_mod  # noqa: E402
+from mushy.proxy.server import (  # noqa: E402
     DestinationBlocked,
     is_blocked_address,
     parse_connect_target,

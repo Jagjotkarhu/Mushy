@@ -1,1 +1,1 @@
-"""Plexo CLI automated test suite."""
+"""Mushy CLI automated test suite."""

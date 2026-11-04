@@ -62,7 +62,7 @@ class TerminalDashboard:
         mirror_info = f"\nActive Mirrors: [bold green]{len(mirrors)}[/bold green]" if mirrors and len(mirrors) > 1 else ""
         self.console.print(
             Panel.fit(
-                f"[bold cyan]Plexo Multi-Network Bonding Engine[/bold cyan]\n"
+                f"[bold cyan]Mushy Multi-Network Bonding Engine[/bold cyan]\n"
                 f"File: [bold yellow]{filename}[/bold yellow] ({total_bytes / (1024*1024):.1f} MB)\n"
                 f"Active Bonded Links: [bold green]{len(adapters)}[/bold green]{mirror_info}",
                 border_style="cyan",

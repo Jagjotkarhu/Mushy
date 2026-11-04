@@ -10,10 +10,10 @@ from pathlib import Path
 import pytest
 from click.testing import CliRunner
 
-from plexo.cli import main
-from plexo.core.adapter import NetworkAdapter
-from plexo.core.client import BoundRangeClient, probe_mirrors
-from plexo.core.engine import BondingDownloadEngine
+from mushy.cli import main
+from mushy.core.adapter import NetworkAdapter
+from mushy.core.client import BoundRangeClient, probe_mirrors
+from mushy.core.engine import BondingDownloadEngine
 
 
 TEST_PAYLOAD = b"MIRROR_BONDING_PAYLOAD_CHUNK_DATA_!" * 1024 * 32  # ~1.15 MB

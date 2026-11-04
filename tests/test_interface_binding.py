@@ -5,12 +5,12 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-import plexo.core.adapter as adapter_mod
-from plexo.core.adapter import (
+import mushy.core.adapter as adapter_mod
+from mushy.core.adapter import (
     bind_socket_to_interface,
     interface_socket_options,
 )
-from plexo.core.client import BoundRangeClient
+from mushy.core.client import BoundRangeClient
 
 
 @pytest.fixture(autouse=True)
@@ -92,7 +92,7 @@ def test_socket_options_present_when_permitted():
 
 
 def test_bound_range_client_applies_device_option():
-    with patch("plexo.core.client.interface_socket_options", return_value=((1, 25, b"wlan0\0"),)):
+    with patch("mushy.core.client.interface_socket_options", return_value=((1, 25, b"wlan0\0"),)):
         client = BoundRangeClient(local_ip="127.0.0.1", iface_name="wlan0")
     opts = client._pool.connection_pool_kw["socket_options"]
     assert (1, 25, b"wlan0\0") in opts

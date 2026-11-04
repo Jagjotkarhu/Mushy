@@ -1,4 +1,4 @@
-"""Command Line Interface for Plexo.
+"""Command Line Interface for Mushy.
 
 Exposes subcommands: download, adapters, proxy, torrent, watch, info.
 """
@@ -31,9 +31,9 @@ console = Console()
 
 
 @click.group()
-@click.version_option(version=__version__, prog_name="plexo")
+@click.version_option(version=__version__, prog_name="mushy")
 def main():
-    """Plexo: Multi-Network Bandwidth Bonding Download Engine."""
+    """Mushy: Multi-Network Bandwidth Bonding Download Engine."""
     pass
 
 
@@ -110,7 +110,7 @@ def download_file(
     is_static = any(url.lower().split("?")[0].endswith(ext) for ext in static_exts)
     if not is_static and any(domain in url.lower() for domain in video_domains):
         console.print(
-            "[bold cyan][INFO][/bold cyan] Media stream URL detected. Delegating to [bold green]plexo video[/bold green]..."
+            "[bold cyan][INFO][/bold cyan] Media stream URL detected. Delegating to [bold green]mushy video[/bold green]..."
         )
         ctx = click.get_current_context()
         ctx.invoke(
@@ -313,7 +313,7 @@ def video_download(
 
     console.print(
         Panel.fit(
-            f"[bold cyan]Plexo Universal Video Engine[/bold cyan]\n"
+            f"[bold cyan]Mushy Universal Video Engine[/bold cyan]\n"
             f"Title: [bold yellow]{metadata.title}[/bold yellow]\n"
             f"Uploader: [magenta]{metadata.uploader or 'Unknown'}[/magenta] | Duration: [cyan]{metadata.duration}s[/cyan]\n"
             f"Video Stream: [green]{vid_info}[/green]{mux_notice}\n"
@@ -402,7 +402,7 @@ def download_torrent(
     if not experimental and not list_files:
         console.print(
             "\n[bold yellow]⚠️ NOTICE:[/bold yellow] The BitTorrent engine is currently experimental.\n"
-            "Run with [bold green]--experimental[/bold green] to proceed (e.g. plexo torrent <source> --experimental).\n"
+            "Run with [bold green]--experimental[/bold green] to proceed (e.g. mushy torrent <source> --experimental).\n"
         )
         return
     from .core.qos import parse_size_str
@@ -425,7 +425,7 @@ def download_torrent(
         console.print(table)
         console.print(
             "\n[dim]To download specific files, run:[/dim]\n"
-            f"  plexo torrent \"{source}\" --select 1,2 -o \"{output_dir}\"\n"
+            f"  mushy torrent \"{source}\" --select 1,2 -o \"{output_dir}\"\n"
         )
         return
 
@@ -446,7 +446,7 @@ def download_torrent(
 
     console.print(
         Panel.fit(
-            f"[bold cyan]Plexo Torrent Swarm Engine[/bold cyan]\n"
+            f"[bold cyan]Mushy Torrent Swarm Engine[/bold cyan]\n"
             f"Name: [bold yellow]{meta.name}[/bold yellow]\n"
             f"Info Hash: [dim]{meta.info_hash_hex}[/dim]\n"
             f"Selected Files: [green]{len(selected_indices) if selected_indices else 'All'}[/green] / {len(meta.files)}\n"
@@ -499,11 +499,11 @@ def watch_clipboard(auto_download: bool, output_dir: Optional[str], poll_interva
 
 @main.command(name="info")
 def show_info():
-    """Display Plexo environment and bonding capabilities."""
+    """Display Mushy environment and bonding capabilities."""
     adapters = get_bonded_pool()
     console.print(
         Panel.fit(
-            f"[bold cyan]Plexo CLI v{__version__}[/bold cyan]\n"
+            f"[bold cyan]Mushy CLI v{__version__}[/bold cyan]\n"
             f"Bonding Engine: [bold green]Active[/bold green]\n"
             f"Verified Online Adapters: [bold yellow]{len(adapters)}[/bold yellow]\n"
             f"Default Proxy Port: [bold magenta]8899[/bold magenta]",

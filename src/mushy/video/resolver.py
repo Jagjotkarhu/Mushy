@@ -30,9 +30,9 @@ def check_video_dependencies() -> None:
     if missing:
         sys.stderr.write(
             "\nError: Missing optional video dependencies!\n"
-            f"The following packages are required for 'plexo video': {', '.join(missing)}\n\n"
+            f"The following packages are required for 'mushy video': {', '.join(missing)}\n\n"
             "To install them, run:\n"
-            "    pip install 'plexo-cli[video]'\n\n"
+            "    pip install 'mushy[video]'\n\n"
         )
         sys.exit(1)
 

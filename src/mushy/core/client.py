@@ -15,7 +15,7 @@ from urllib.parse import unquote, urlparse
 import urllib3
 import urllib3.connection
 
-from plexo.core.adapter import interface_socket_options
+from mushy.core.adapter import interface_socket_options
 
 
 @dataclass

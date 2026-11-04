@@ -7,8 +7,8 @@ import tempfile
 import threading
 from pathlib import Path
 import pytest
-from plexo.core.adapter import NetworkAdapter
-from plexo.core.engine import BondingDownloadEngine
+from mushy.core.adapter import NetworkAdapter
+from mushy.core.engine import BondingDownloadEngine
 
 
 class RangeHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
@@ -112,7 +112,7 @@ def test_bonded_engine_with_cookies_and_referer(mock_server):
             adapters=[mock_adapter],
             chunk_size=128 * 1024,
             custom_headers={"X-Custom-Auth": "Token123"},
-            cookie="session=plexo_movie_test",
+            cookie="session=mushy_movie_test",
             referer="https://itsfuckingfast.co/download",
         )
 
@@ -124,7 +124,7 @@ def test_bonded_engine_with_cookies_and_referer(mock_server):
 def test_bonded_engine_resume(mock_server):
     with tempfile.TemporaryDirectory() as tmpdir:
         output_file = Path(tmpdir) / "resume_test.bin"
-        state_file = output_file.with_name(output_file.name + ".plexo")
+        state_file = output_file.with_name(output_file.name + ".mushy")
         total_len = len(RangeHTTPRequestHandler.DATA)
         chunk_size = 128 * 1024
 

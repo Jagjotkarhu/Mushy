@@ -1,4 +1,4 @@
-"""Plexo Video Engine: Universal stream resolver, multi-network transport, and muxer."""
+"""Mushy Video Engine: Universal stream resolver, multi-network transport, and muxer."""
 
 from .resolver import VideoMetadata, VideoTrack, AudioTrack, SubtitleTrack, resolve_video
 from .downloader import BondedVideoDownloader, sanitize_filename

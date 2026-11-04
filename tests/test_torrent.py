@@ -2,10 +2,10 @@
 
 import hashlib
 import tempfile
-from plexo.core.adapter import NetworkAdapter
-from plexo.torrent.bencode import bdecode, bencode
-from plexo.torrent.client import TorrentBondingEngine
-from plexo.torrent.metadata import TorrentMetadata, parse_magnet
+from mushy.core.adapter import NetworkAdapter
+from mushy.torrent.bencode import bdecode, bencode
+from mushy.torrent.client import TorrentBondingEngine
+from mushy.torrent.metadata import TorrentMetadata, parse_magnet
 
 
 def test_bencode_bdecode_roundtrip():
@@ -94,7 +94,7 @@ def test_torrent_bonding_engine_download():
 
 
 def test_torrent_multi_file_selection():
-    from plexo.torrent.metadata import TorrentFileEntry
+    from mushy.torrent.metadata import TorrentFileEntry
     with tempfile.TemporaryDirectory() as tmpdir:
         piece_size = 1024
         p1 = b"T" * piece_size

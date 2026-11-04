@@ -1,6 +1,6 @@
-"""Tests for the Plexo Video Stream Resolver and Quality Fallback Engine."""
+"""Tests for the Mushy Video Stream Resolver and Quality Fallback Engine."""
 
-from plexo.video.resolver import (
+from mushy.video.resolver import (
     AudioTrack,
     SubtitleTrack,
     VideoTrack,
@@ -222,7 +222,7 @@ def test_parse_manifest_audio_only():
 
 def test_resolve_video_cookies_options(tmp_path):
     from unittest.mock import MagicMock, patch
-    from plexo.video.resolver import resolve_video
+    from mushy.video.resolver import resolve_video
 
     cookie_file = tmp_path / "cookies.txt"
     cookie_file.write_text("# Netscape HTTP Cookie File\n.example.com\tTRUE\t/\tFALSE\t2147483647\tcf_clearance\tabc123\n")

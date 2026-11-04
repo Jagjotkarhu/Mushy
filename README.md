@@ -1,7 +1,7 @@
-# ⚡ Plexo CLI (`plexo-cli`)
+# ⚡ Mushy CLI (`mushy`)
 
-[![PyPI version](https://img.shields.io/pypi/v/plexo-cli.svg?color=blue)](https://pypi.org/project/plexo-cli/)
-[![Python versions](https://img.shields.io/pypi/pyversions/plexo-cli.svg)](https://pypi.org/project/plexo-cli/)
+[![PyPI version](https://img.shields.io/pypi/v/mushy.svg?color=blue)](https://pypi.org/project/mushy/)
+[![Python versions](https://img.shields.io/pypi/pyversions/mushy.svg)](https://pypi.org/project/mushy/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Tests](https://img.shields.io/badge/tests-55%20passed-success.svg)](tests/)
 
@@ -12,8 +12,8 @@
 
 ## 🚀 Key Features
 
-* **🌐 Multi-Socket Bandwidth Bonding:** Binds parallel download workers to distinct physical network interfaces (kernel-level `SO_BINDTODEVICE` / `IP_BOUND_IF` where permitted, source-IP binding otherwise). Different chunks of a file are fetched over different links; one TCP connection is never split. Run `plexo doctor` to verify traffic really uses every link.
-* **📹 Universal Video Downloader (`plexo video`):** Extracts, downloads, and muxes video/audio streams across 1,800+ platforms (YouTube, Instagram Reels, TikTok, Twitter/X, Reddit, Vimeo) using multi-network bonding.
+* **🌐 Multi-Socket Bandwidth Bonding:** Binds parallel download workers to distinct physical network interfaces (kernel-level `SO_BINDTODEVICE` / `IP_BOUND_IF` where permitted, source-IP binding otherwise). Different chunks of a file are fetched over different links; one TCP connection is never split. Run `mushy doctor` to verify traffic really uses every link.
+* **📹 Universal Video Downloader (`mushy video`):** Extracts, downloads, and muxes video/audio streams across 1,800+ platforms (YouTube, Instagram Reels, TikTok, Twitter/X, Reddit, Vimeo) using multi-network bonding.
 * **🎯 Mathematical Quality Fallback:** Targets your exact desired resolution (e.g. `--quality 1080p`), gracefully falling back to the nearest highest available resolution (`height <= requested`) if 1080p is unavailable.
 * **🎵 Multi-Track & Audio Extraction:** Download isolated high-bitrate audio (`--audio-only`), specify audio language tracks (`--audio-lang`), and fetch multi-language subtitles (`--sub en,es`).
 * **⚡ Zero-Copy Stream Muxing:** Combines separate DASH/HLS high-resolution video and audio streams seamlessly via zero-copy FFmpeg (`-c copy`) in 0.1 seconds without CPU strain.
@@ -22,9 +22,9 @@
 * **🪞 Multi-Source Mirror Bonding (`-m / --mirror`):** Pulls chunks simultaneously across distinct server mirrors (e.g. Mirror A on Wi-Fi, Mirror B on 5G) to spread load across servers. Respect each server's terms of service; some sites restrict this kind of parallel access.
 * **🛡️ Per-Adapter Data Quotas (`-q / --quota`):** Protects mobile hotspot data caps (e.g. `-q usb=1.5GB`). When the cap is reached, that connection rests while unlimited Wi-Fi finishes the rest.
 * **📂 Selective Torrent Downloads (`--list`, `--select`):** Inspect contents of multi-file season packs and download only the specific episodes you need.
-* **📋 Background Clipboard Watcher (`plexo watch`):** IDM-style daemon that monitors the system clipboard and auto-captures `.mp4`, `.mkv`, `.zip`, `.iso`, or `magnet:` links.
-* **⚡ Zero-Touch Local Acceleration Proxy (`plexo proxy`):** Runs a local forward proxy (`127.0.0.1:8899`) that spreads *connections* round-robin across your links for `pip`, `curl`, `git`, and `huggingface-cli`. It does not split a single connection, so it helps most when a tool opens many parallel connections.
-* **💾 Smart Checkpointing & Instant Resume (`.plexo`):** Non-destructive NTFS/ext4 sparse file pre-allocation with zero-overhead resume on interrupted downloads.
+* **📋 Background Clipboard Watcher (`mushy watch`):** IDM-style daemon that monitors the system clipboard and auto-captures `.mp4`, `.mkv`, `.zip`, `.iso`, or `magnet:` links.
+* **⚡ Zero-Touch Local Acceleration Proxy (`mushy proxy`):** Runs a local forward proxy (`127.0.0.1:8899`) that spreads *connections* round-robin across your links for `pip`, `curl`, `git`, and `huggingface-cli`. It does not split a single connection, so it helps most when a tool opens many parallel connections.
+* **💾 Smart Checkpointing & Instant Resume (`.mushy`):** Non-destructive NTFS/ext4 sparse file pre-allocation with zero-overhead resume on interrupted downloads.
 
 ---
 
@@ -32,13 +32,13 @@
 
 ### From PyPI
 ```bash
-pip install plexo-cli
+pip install mushy
 ```
 
 ### From Source (Editable Mode)
 ```bash
-git clone https://github.com/Jagjotkarhu/plexo.git
-cd plexo/packages/plexo-cli
+git clone https://github.com/Jagjotkarhu/Mushy.git
+cd Mushy
 pip install -e .
 ```
 
@@ -46,10 +46,10 @@ pip install -e .
 
 ## 🛠️ CLI Command Reference
 
-### 1. Discover Active Interfaces: `plexo adapters`
+### 1. Discover Active Interfaces: `mushy adapters`
 Scans and validates all active physical, Ethernet, and wireless interfaces, verifying outward internet reachability via canary probes:
 ```bash
-plexo adapters
+mushy adapters
 ```
 
 *Example Output:*
@@ -64,38 +64,38 @@ plexo adapters
 
 ---
 
-### 2. Bonded HTTP Downloads: `plexo download`
+### 2. Bonded HTTP Downloads: `mushy download`
 
 #### Basic Parallel Download
 ```bash
-plexo download "https://example.com/largefile.zip" -o "largefile.zip"
+mushy download "https://example.com/largefile.zip" -o "largefile.zip"
 ```
 
 #### Watch While Downloading (`--sequential`)
 Download chunks in strict chronological order so you can open and watch the video in VLC within 30 seconds:
 ```bash
-plexo download "https://example.com/movie.mp4" --sequential -o "movie.mp4"
+mushy download "https://example.com/movie.mp4" --sequential -o "movie.mp4"
 ```
 
 #### Multi-Source Mirror Bonding (`-m / --mirror`)
 Distribute chunk downloads across multiple server mirrors and multiple adapters:
 ```bash
-plexo download "https://mirror1.com/ubuntu.iso" -m "https://mirror2.com/ubuntu.iso" -o "ubuntu.iso"
+mushy download "https://mirror1.com/ubuntu.iso" -m "https://mirror2.com/ubuntu.iso" -o "ubuntu.iso"
 ```
 
 #### Protect Mobile Data Caps (`-q / --quota`)
 Specify a maximum data quota for any adapter by name or IP:
 ```bash
 # Cap Phone USB tethering to 1.5 GB, let Wi-Fi pull the rest:
-plexo download "<url>" -q "usb=1.5GB"
+mushy download "<url>" -q "usb=1.5GB"
 
 # Cap a specific network IP to 500 MB:
-plexo download "<url>" -q "192.168.43.55=500MB"
+mushy download "<url>" -q "192.168.43.55=500MB"
 ```
 
 #### Authenticated / Protected Filelockers (`--cookie`, `--referer`, `-H`)
 ```bash
-plexo download "<protected-url>" \
+mushy download "<protected-url>" \
   --cookie "session_token=abcdef123456" \
   --referer "https://filelocker.com/view" \
   -H "Authorization: Bearer my_token"
@@ -103,119 +103,119 @@ plexo download "<protected-url>" \
 
 ---
 
-### 3. Universal Video Downloader: `plexo video`
+### 3. Universal Video Downloader: `mushy video`
 Download high-resolution videos, Reels, and audio tracks across 1,800+ platforms with multi-network socket bonding and automatic zero-copy muxing:
 
 #### Basic Video Download
 ```bash
 # Target 1080p (falls back smoothly to 720p or highest available if 1080p is absent):
-plexo video "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+mushy video "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
 
 # Download Instagram Reels, TikTok, Twitter/X, or Reddit videos:
-plexo video "https://www.instagram.com/reel/C3b45x..."
-plexo video "https://x.com/user/status/123456789"
+mushy video "https://www.instagram.com/reel/C3b45x..."
+mushy video "https://x.com/user/status/123456789"
 ```
 
 #### Resolution Fallback Hierarchy (`-q / --quality`)
 ```bash
 # Target 4K resolution (2160p):
-plexo video "<url>" -q 4k
+mushy video "<url>" -q 4k
 
 # Target specific vertical resolution:
-plexo video "<url>" -q 720p
+mushy video "<url>" -q 720p
 
 # Always grab highest available resolution:
-plexo video "<url>" -q best
+mushy video "<url>" -q best
 ```
 
 #### Audio Extraction & Language Selection (`--audio-only`, `--audio-lang`)
 ```bash
 # Extract high-bitrate audio track only (m4a/opus/mp3):
-plexo video "https://www.youtube.com/watch?v=..." --audio-only
+mushy video "https://www.youtube.com/watch?v=..." --audio-only
 
 # Specify preferred audio language track:
-plexo video "<url>" --audio-lang en
+mushy video "<url>" --audio-lang en
 ```
 
 #### Subtitle Extraction (`--sub`)
 ```bash
 # Download English and Spanish subtitles:
-plexo video "<url>" --sub en,es
+mushy video "<url>" --sub en,es
 ```
 
 #### Inspect Available Formats (`--list`)
 Inspect video codecs, resolutions, audio streams, and available subtitles without downloading any media bytes:
 ```bash
-plexo video "<url>" --list
+mushy video "<url>" --list
 ```
 
-#### Smart Auto-Delegation in `plexo download`
-If you pass a streaming video link directly to `plexo download`, Plexo automatically recognizes the media host and hands off execution to the video downloader engine:
+#### Smart Auto-Delegation in `mushy download`
+If you pass a streaming video link directly to `mushy download`, Mushy automatically recognizes the media host and hands off execution to the video downloader engine:
 ```bash
-plexo download "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-# [INFO] Media stream URL detected. Delegating to plexo video...
+mushy download "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+# [INFO] Media stream URL detected. Delegating to mushy video...
 ```
 
 ---
 
-### 4. BitTorrent Swarm Multi-Homing: `plexo torrent`
+### 4. BitTorrent Swarm Multi-Homing: `mushy torrent`
 
 #### Magnet Links & `.torrent` Files
 ```bash
 # Magnet URI:
-plexo torrent "magnet:?xt=urn:btih:EXAMPLE_HASH&dn=Debian" -o "D:\Downloads"
+mushy torrent "magnet:?xt=urn:btih:EXAMPLE_HASH&dn=Debian" -o "D:\Downloads"
 
 # Local .torrent file:
-plexo torrent "debian.torrent" -o "D:\Downloads"
+mushy torrent "debian.torrent" -o "D:\Downloads"
 ```
 
 #### Inspect Torrent Files (`--list`)
 ```bash
-plexo torrent "magnet:?xt=urn:btih:..." --list
+mushy torrent "magnet:?xt=urn:btih:..." --list
 ```
 
 #### Download Selected Files (`--select`)
 Download only specific files or episodes from large torrents:
 ```bash
 # Download only Episode 1 (index 1):
-plexo torrent "magnet:?xt=urn:btih:..." --select 1
+mushy torrent "magnet:?xt=urn:btih:..." --select 1
 
 # Download multiple episodes:
-plexo torrent "magnet:?xt=urn:btih:..." --select 1,2,5
+mushy torrent "magnet:?xt=urn:btih:..." --select 1,2,5
 ```
 
 #### Sequential Torrent Playback (`--sequential`)
 ```bash
-plexo torrent "magnet:?xt=urn:btih:..." --sequential -o "D:\Movies"
+mushy torrent "magnet:?xt=urn:btih:..." --sequential -o "D:\Movies"
 ```
 
 ---
 
-### 5. Background Clipboard Watcher: `plexo watch`
+### 5. Background Clipboard Watcher: `mushy watch`
 Listens in the background for copied download links (`.mp4`, `.mkv`, `.zip`, `.iso`, `magnet:`, etc.):
 
 ```bash
 # Interactive mode (prompts [Y/n] when a downloadable URL is copied):
-plexo watch
+mushy watch
 
 # Headless / Auto-download mode:
-plexo watch -a -o "D:\Downloads"
+mushy watch -a -o "D:\Downloads"
 
 # Auto-download with sequential streaming:
-plexo watch -a --sequential -o "D:\Movies"
+mushy watch -a --sequential -o "D:\Movies"
 ```
 
 ---
 
-### 6. Local Acceleration Proxy: `plexo proxy`
+### 6. Local Acceleration Proxy: `mushy proxy`
 Accelerate development tools across bonded network connections:
 
 ```bash
 # Start proxy on default port 8899:
-plexo proxy --port 8899
+mushy proxy --port 8899
 
 # Require credentials (mandatory for any non-loopback bind):
-plexo proxy --host 0.0.0.0 --auth user:pass
+mushy proxy --host 0.0.0.0 --auth user:pass
 ```
 
 **Safety defaults:** only ports 80/443 are proxied, and destinations that resolve to loopback, private, link-local (e.g. cloud metadata) or other non-public addresses are blocked with HTTP 403. Pass `--allow-private` only if you intentionally proxy to internal hosts.
@@ -232,10 +232,10 @@ curl -O https://example.com/dataset.tar.gz
 
 ---
 
-### 7. Probe Server Capabilities: `plexo info`
+### 7. Probe Server Capabilities: `mushy info`
 Inspect remote server headers, file size, MIME type, and byte-range support:
 ```bash
-plexo info
+mushy info
 ```
 
 ---
@@ -245,7 +245,7 @@ plexo info
 The package includes a comprehensive automated test suite testing live sockets, mock mirrors, sparse file allocation, torrent bencoding, QoS quota enforcement, clipboard regex extractors, yt-dlp stream resolution, and zero-copy stream muxing:
 
 ```bash
-pytest packages/plexo-cli -v
+pytest packages/mushy -v
 ```
 ```text
 tests/test_adapter.py            PASSED (3/3)
@@ -263,11 +263,11 @@ tests/test_video_downloader.py   PASSED (10/10)
 
 ## 🔧 Troubleshooting & Known Issues
 
-### 1. `plexo` is not recognized as a command
+### 1. `mushy` is not recognized as a command
 * **Cause:** On Windows (especially Microsoft Store Python editions), user CLI binaries are installed into a sandboxed `Scripts` directory not included in `$env:PATH`.
 * **Fix:** Invoke the module directly via Python:
   ```bash
-  python -m plexo download "<url>"
+  python -m mushy download "<url>"
   ```
   Or add your user scripts directory (`python -c "import sysconfig; print(sysconfig.get_path('scripts'))"`) to your Windows environment `PATH`.
 
@@ -278,7 +278,7 @@ tests/test_video_downloader.py   PASSED (10/10)
 * **Resolved in v0.1.2:** After downloading multi-hundred MB or GB files, the sparse file writer computes a full SHA-256 integrity checksum. A live console status spinner (`Verifying file checksum (SHA-256)...`) now clearly indicates verification in progress.
 
 ### 4. Cloudflare Worker / CDN links dropping
-* **Architecture Note:** URLs proxied through serverless edge workers (e.g. `*.workers.dev`) or filelockers may cap parallel sub-requests or disallow concurrent multi-IP HTTP `Range` slices. If a remote host rejects range slices, Plexo automatically falls back to single-stream mode on the primary connection.
+* **Architecture Note:** URLs proxied through serverless edge workers (e.g. `*.workers.dev`) or filelockers may cap parallel sub-requests or disallow concurrent multi-IP HTTP `Range` slices. If a remote host rejects range slices, Mushy automatically falls back to single-stream mode on the primary connection.
 
 ---
 
@@ -289,6 +289,6 @@ MIT © Anmol Kapil & Jagjot Singh
 
 ## Verifying multi-link binding on your machine
 
-1. Connect two real links (e.g. Wi-Fi + Ethernet or phone tether) and run `plexo doctor`. It downloads over every link and compares per-interface byte counters.
-2. Both interfaces must show traffic. If only one does, on Linux grant the capability (`sudo setcap cap_net_raw+ep $(readlink -f $(which python3))` or run with `sudo`) or configure policy routing; Plexo logs a warning when it can only bind by source IP.
-3. `plexo download <url> -o file` and watch the per-adapter bars; both links should climb.
+1. Connect two real links (e.g. Wi-Fi + Ethernet or phone tether) and run `mushy doctor`. It downloads over every link and compares per-interface byte counters.
+2. Both interfaces must show traffic. If only one does, on Linux grant the capability (`sudo setcap cap_net_raw+ep $(readlink -f $(which python3))` or run with `sudo`) or configure policy routing; Mushy logs a warning when it can only bind by source IP.
+3. `mushy download <url> -o file` and watch the per-adapter bars; both links should climb.

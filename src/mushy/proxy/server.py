@@ -171,7 +171,7 @@ class LocalBondedProxy:
             self._handle_client, self.host, self.port
         )
         self.console.print(
-            f"[bold green]Plexo Proxy running on {self.host}:{self.port}[/bold green]"
+            f"[bold green]Mushy Proxy running on {self.host}:{self.port}[/bold green]"
         )
         if self.auth:
             self.console.print("[yellow]Proxy Authentication: ENABLED (Basic)[/yellow]")
@@ -229,7 +229,7 @@ class LocalBondedProxy:
                 if not validate_proxy_auth(auth_val, self.auth):
                     client_writer.write(
                         b"HTTP/1.1 407 Proxy Authentication Required\r\n"
-                        b'Proxy-Authenticate: Basic realm="Plexo Proxy"\r\n'
+                        b'Proxy-Authenticate: Basic realm="Mushy Proxy"\r\n'
                         b"Connection: close\r\n"
                         b"Content-Length: 0\r\n\r\n"
                     )
@@ -246,7 +246,7 @@ class LocalBondedProxy:
                         "HTTP/1.1 403 Forbidden\r\n"
                         "Content-Type: text/plain\r\n"
                         "Connection: close\r\n\r\n"
-                        f"CONNECT to port {port} is restricted by Plexo.\r\n"
+                        f"CONNECT to port {port} is restricted by Mushy.\r\n"
                     ).encode("utf-8")
                     client_writer.write(msg)
                     await client_writer.drain()
@@ -327,7 +327,7 @@ class LocalBondedProxy:
 
         try:
             if port not in ALLOWED_CONNECT_PORTS:
-                await self._reject(client_writer, f"port {port} is restricted by Plexo")
+                await self._reject(client_writer, f"port {port} is restricted by Mushy")
                 return
             try:
                 target_ip = await resolve_destination(host, port, self.allow_private)
@@ -353,7 +353,7 @@ class LocalBondedProxy:
 
     async def _reject(self, client_writer: asyncio.StreamWriter, reason: str) -> None:
         """Send a 403 and close the client connection."""
-        body = f"Blocked by Plexo: {reason}.\r\n".encode("utf-8")
+        body = f"Blocked by Mushy: {reason}.\r\n".encode("utf-8")
         client_writer.write(
             b"HTTP/1.1 403 Forbidden\r\nContent-Type: text/plain\r\n"
             b"Connection: close\r\nContent-Length: " + str(len(body)).encode() + b"\r\n\r\n" + body

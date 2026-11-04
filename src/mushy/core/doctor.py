@@ -16,7 +16,7 @@ def run_doctor_diagnostic(active_interfaces: List[str], duration_secs: float = 2
     Measures per-NIC throughput deltas.
     Warns if bonding is configured but only one link carries all traffic.
     """
-    console.print("\n[bold cyan]🔍 Running Plexo Doctor Diagnostic...[/bold cyan]")
+    console.print("\n[bold cyan]🔍 Running Mushy Doctor Diagnostic...[/bold cyan]")
     console.print(f"Sampling interface traffic for {duration_secs}s...\n")
 
     before = {

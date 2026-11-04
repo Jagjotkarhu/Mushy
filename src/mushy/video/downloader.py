@@ -27,7 +27,7 @@ def sanitize_filename(name: str, max_length: int = 120) -> str:
     # Remove leading/trailing dots or spaces
     clean = clean.strip(". ")
     if not clean:
-        clean = "plexo_download"
+        clean = "mushy_download"
     if len(clean) > max_length:
         clean = clean[:max_length].rstrip(". ")
     return clean

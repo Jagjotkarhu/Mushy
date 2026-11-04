@@ -1,7 +1,7 @@
 # Security Policy
 
 ## Supported Versions
-Only the latest release of `plexo-cli` receives security updates.
+Only the latest release of `mushy` receives security updates.
 
 | Version | Supported |
 | ------- | --------- |
