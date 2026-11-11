@@ -2,6 +2,16 @@
 
 All notable changes to `mushy` are documented in this file.
 
+## [0.3.1] - 2026-11-06
+
+### Fixed
+- **`mushy doctor` now generates its own test traffic.** It previously only watched interface counters for two seconds, so idle links showed "no traffic" and the "only 1 interface carried traffic" warning was misleading. It now downloads a small file over every link at the same time (pinned to that interface) and cross-checks each interface's own byte counter, reporting per-link bytes, speed, the binding method (`device` or `source-ip`) and a clear status (OK / LEAK / FAILED). Use `--url` for a custom test file and `--duration` to cap the time per link. The command exits with status 1 if any link fails.
+- **Adapter online check retries.** A single dropped packet no longer marks a healthy link offline (this made `mushy proxy` list only one of two links).
+- README no longer claims doctor downloads over every link (it now does).
+
+### Added
+- **Per-link summary after downloads:** shows how many MB each link carried and its share, and explains when a link was unused (file smaller than one 8 MB chunk, or a link that carried no data).
+
 ## [0.3.0] - 2026-11-05
 
 ### Renamed

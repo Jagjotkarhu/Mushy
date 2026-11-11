@@ -28,6 +28,9 @@ class DownloadChunk:
     retries: int = field(default=0, compare=False)
 
 
+DEFAULT_CHUNK_SIZE = 8 * 1024 * 1024
+
+
 @dataclass
 class ProgressUpdate:
     total_bytes: int
@@ -48,7 +51,7 @@ class BondingDownloadEngine:
         url: str,
         output_path: Optional[str | Path] = None,
         adapters: Optional[List[NetworkAdapter]] = None,
-        chunk_size: int = 8 * 1024 * 1024,  # 8 MB default chunk
+        chunk_size: int = DEFAULT_CHUNK_SIZE,  # 8 MB default chunk
         workers_per_adapter: int = 2,
         custom_headers: Optional[dict[str, str]] = None,
         cookie: Optional[str] = None,

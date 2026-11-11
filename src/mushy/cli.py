@@ -23,6 +23,7 @@ from rich.panel import Panel
 from rich.table import Table
 from . import __version__
 from .core.adapter import discover_adapters, get_bonded_pool
+from .core.doctor import DEFAULT_PROBE_URL
 from .core.engine import BondingDownloadEngine
 from .proxy.server import run_proxy
 from .ui.dashboard import TerminalDashboard
@@ -514,13 +515,14 @@ def show_info():
 
 
 @main.command(name="doctor")
-@click.option("--duration", default=2.0, type=float, help="Sampling duration in seconds (default: 2.0s).")
-def doctor_check(duration: float):
-    """Diagnose multi-network interface routing and socket binding health."""
+@click.option("--duration", default=5.0, type=float, help="Maximum seconds to test each link (default: 5).")
+@click.option("--url", "probe_url", default=DEFAULT_PROBE_URL, show_default=False, help="File to download for the test (default: a public speed-test file).")
+def doctor_check(duration: float, probe_url: str):
+    """Test that every link really carries its own traffic (downloads a small file over each)."""
     from .core.doctor import run_doctor_diagnostic
-    adapters = discover_adapters(verify_online=False)
-    iface_names = [a.name for a in adapters if a.is_up]
-    run_doctor_diagnostic(active_interfaces=iface_names, duration_secs=duration)
+    adapters = [a for a in discover_adapters(verify_online=False) if a.is_up]
+    if not run_doctor_diagnostic(adapters, duration_secs=duration, probe_url=probe_url):
+        sys.exit(1)
 
 
 if __name__ == "__main__":
