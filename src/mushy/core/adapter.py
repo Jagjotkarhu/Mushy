@@ -11,6 +11,7 @@ import logging
 import platform
 import socket
 import struct
+import time
 from dataclasses import dataclass
 from functools import lru_cache
 from typing import List, Optional, Tuple
@@ -148,25 +149,37 @@ def is_usable_ip(ip_str: str) -> bool:
         return False
 
 
-def test_adapter_connectivity(ip_address: str, iface_name: Optional[str] = None, timeout: float = 2.0) -> bool:
-    """Verifies that an outgoing connection bound to this source IP can reach the internet."""
+def test_adapter_connectivity(
+    ip_address: str,
+    iface_name: Optional[str] = None,
+    timeout: float = 2.0,
+    retries: int = 2,
+) -> bool:
+    """Verifies that an outgoing connection bound to this source IP can reach the internet.
+
+    Tries each test host, and repeats the round ``retries`` times so that one
+    dropped packet or a briefly busy link does not mark a healthy adapter offline.
+    """
     test_hosts = [("1.1.1.1", 53), ("8.8.8.8", 53)]
-    for host, port in test_hosts:
-        sock = None
-        try:
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.settimeout(timeout)
-            if iface_name:
-                bind_socket_to_interface(sock, iface_name, ip_address)
-            else:
-                sock.bind((ip_address, 0))
-            sock.connect((host, port))
-            return True
-        except (socket.error, OSError):
-            continue
-        finally:
-            if sock:
-                sock.close()
+    for attempt in range(max(1, retries)):
+        for host, port in test_hosts:
+            sock = None
+            try:
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                sock.settimeout(timeout)
+                if iface_name:
+                    bind_socket_to_interface(sock, iface_name, ip_address)
+                else:
+                    sock.bind((ip_address, 0))
+                sock.connect((host, port))
+                return True
+            except (socket.error, OSError):
+                continue
+            finally:
+                if sock:
+                    sock.close()
+        if attempt + 1 < retries:
+            time.sleep(0.3)
     return False
 
 

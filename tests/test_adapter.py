@@ -35,3 +35,34 @@ def test_adapter_display_name():
     assert "Wi-Fi" in adapter.display_name
     assert "WIFI" in adapter.display_name
     assert "192.168.1.45" in adapter.display_name
+
+
+# --- connectivity check retries (v0.3.1) -----------------------------------
+
+def test_connectivity_retries_after_a_failed_round():
+    from unittest.mock import MagicMock, patch
+
+    import mushy.core.adapter as adapter_mod
+
+    sock = MagicMock()
+    # round 1: both hosts fail, round 2: first host succeeds
+    sock.connect.side_effect = [OSError("timeout"), OSError("timeout"), None]
+    with patch.object(adapter_mod.socket, "socket", return_value=sock), patch.object(
+        adapter_mod.time, "sleep"
+    ):
+        assert adapter_mod.test_adapter_connectivity("10.0.0.2") is True
+    assert sock.connect.call_count == 3
+
+
+def test_connectivity_gives_up_after_all_retries():
+    from unittest.mock import MagicMock, patch
+
+    import mushy.core.adapter as adapter_mod
+
+    sock = MagicMock()
+    sock.connect.side_effect = OSError("unreachable")
+    with patch.object(adapter_mod.socket, "socket", return_value=sock), patch.object(
+        adapter_mod.time, "sleep"
+    ):
+        assert adapter_mod.test_adapter_connectivity("10.0.0.2", retries=2) is False
+    assert sock.connect.call_count == 4  # 2 hosts x 2 rounds

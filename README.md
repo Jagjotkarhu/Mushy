@@ -289,7 +289,6 @@ MIT © Anmol Kapil & Jagjot Singh
 
 ## Verifying multi-link binding on your machine
 
-1. Connect two real links (e.g. Wi-Fi + Ethernet or phone tether) and run `mushy doctor`. It downloads over every link and compares per-interface byte counters.
+1. Connect two real links (e.g. Wi-Fi + Ethernet or phone tether) and run `mushy doctor`. It downloads a small test file over every link at the same time and checks each interface's own byte counter, so a link that silently routes through another interface shows up as a leak. Use `--url` to test with a file of your choice.
 2. Both interfaces must show traffic. If only one does, on Linux grant the capability (`sudo setcap cap_net_raw+ep $(readlink -f $(which python3))` or run with `sudo`) or configure policy routing; Mushy logs a warning when it can only bind by source IP.
-3. `mushy download <url> -o file` and watch the per-adapter bars; both links should climb.
-**Status:** Multi-link interface binding is covered by unit tests and verified on loopback and a single real link. Testing across two physical links is still pending, so please report results via Issues.
+3. `mushy download <url> -o file` and watch the per-adapter bars; both links should climb. Use a file larger than 8 MB: smaller files are a single chunk and use only one link. The summary lists how much each link carried.
